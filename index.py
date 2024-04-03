@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from bs4 import BeautifulSoup
-import browser_cookie3
+
 import requests 
 import json
 
