@@ -123,29 +123,29 @@ async def scrape_website(request: Request):
     ## send post request to each link
 
     for href_url in href_urls_page1:
-        # payload = {
-        #     "Opmerking": """ Geachte heer/mevrouw,
-        #     Ik ben Miraç Kaçmaz en werk een jaar als Digital Marketing Manager bij Hairtec Haarkliniek. Samen met mijn werkgever hebben we besloten dat ik als expat in Nederland kom werken voor hem.
-        #     Ik ben daarom nu op zoek naar een woning voor alleenstaand gebruik. Mijn werkgever staat volledig garant voor de huur en gaat de huurovereenkomst op hun bedrijf stellen.
-        #     Ik verheug me op uw reactie.
-        #     Met vriendelijke groet,
-        #     Miraç Kaçmaz""",
-        #     "Email": "me@mirackacmaz.com",
-        #     "Telefoon": "+905527526544",
-        #     "Aanhef": "Dhr",
-        #     "Voornaam": "Mirac",
-        #     "Achternaam": "Kacmaz",
-        #     "HypotheekAdviesRequested": "false",
-        # }
         payload = {
-            "Opmerking": "test",
-            "Email": "test@gmail.com",
-            "Telefoon": "1234567890",
+            "Opmerking": """ Geachte heer/mevrouw,
+            Ik ben Miraç Kaçmaz en werk een jaar als Digital Marketing Manager bij Hairtec Haarkliniek. Samen met mijn werkgever hebben we besloten dat ik als expat in Nederland kom werken voor hem.
+            Ik ben daarom nu op zoek naar een woning voor alleenstaand gebruik. Mijn werkgever staat volledig garant voor de huur en gaat de huurovereenkomst op hun bedrijf stellen.
+            Ik verheug me op uw reactie.
+            Met vriendelijke groet,
+            Miraç Kaçmaz""",
+            "Email": "me@mirackacmaz.com",
+            "Telefoon": "+905527526544",
             "Aanhef": "Dhr",
-            "Voornaam": "test",
-            "Achternaam": "test",
+            "Voornaam": "Mirac",
+            "Achternaam": "Kacmaz",
             "HypotheekAdviesRequested": "false",
         }
+        # payload = {
+        #     "Opmerking": "test",
+        #     "Email": "test@gmail.com",
+        #     "Telefoon": "1234567890",
+        #     "Aanhef": "Dhr",
+        #     "Voornaam": "test",
+        #     "Achternaam": "test",
+        #     "HypotheekAdviesRequested": "false",
+        # }
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
             "Accept": "*/*",
@@ -160,10 +160,10 @@ async def scrape_website(request: Request):
         }
         try:
             # if url was sent before, do not send again
-            existing_urls = supabase.table("urls").select("*").eq("url", href_url).execute()
-            if len(existing_urls.data) > 0:
-                print("this url exists")
-                continue
+            # existing_urls = supabase.table("urls").select("*").eq("url", href_url).execute()
+            # if len(existing_urls.data) > 0:
+            #     print("this url exists")
+            #     continue
 
             request = requests.post(href_url, data=payload, headers=headers)
 
