@@ -25,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+print("api is running")
 def scrape_page(url: str, page: int):
     url_with_page = f"{url}&search_result={page}"
     try:
