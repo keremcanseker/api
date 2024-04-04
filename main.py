@@ -124,17 +124,12 @@ async def scrape_website(request: Request):
 
     for href_url in href_urls_page1:
         payload = {
-            "Opmerking": """ Geachte heer/mevrouw,
-            Ik ben Miraç Kaçmaz en werk een jaar als Digital Marketing Manager bij Hairtec Haarkliniek. Samen met mijn werkgever hebben we besloten dat ik als expat in Nederland kom werken voor hem.
-            Ik ben daarom nu op zoek naar een woning voor alleenstaand gebruik. Mijn werkgever staat volledig garant voor de huur en gaat de huurovereenkomst op hun bedrijf stellen.
-            Ik verheug me op uw reactie.
-            Met vriendelijke groet,
-            Miraç Kaçmaz""",
-            "Email": "me@mirackacmaz.com",
-            "Telefoon": "+905527526544",
+           "Opmerking": " Hello, i want to see this properity.",
+            "Email": "mkdigitalmarketer@gmail.com",
+            "Telefoon": "+905306423444",
             "Aanhef": "Dhr",
-            "Voornaam": "Mirac",
-            "Achternaam": "Kacmaz",
+            "Voornaam": "Kemal",
+            "Achternaam": "Sezen",
             "HypotheekAdviesRequested": "false",
         }
         # payload = {
@@ -166,7 +161,7 @@ async def scrape_website(request: Request):
             #     continue
 
             request = requests.post(href_url, data=payload, headers=headers)
-
+            
             # if request is successful,save url to database
             if request.status_code == 200:
                 print("request is successful")
