@@ -4,7 +4,6 @@ from supabase import create_client, Client
 from fastapi import FastAPI , Request
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-
 from bs4 import BeautifulSoup
 
 import requests 
@@ -41,14 +40,29 @@ def scrape_page(url: str, page: int):
         # print(request.content)
         soup = BeautifulSoup(request.content, 'html.parser')
 
-        # Find all a elements with the specified data-test-id attribute
-        a_elements = soup.find_all('a', {'data-test-id': 'object-image-link'})
+        div_elements = soup.find_all('div', {'data-test-id': 'search-result-item'})
 
-        # Extract the href URLs from the a elements
-        href_urls = [a['href'] for a in a_elements]
-
+        # Extract the href URLs from the div elements and transform them
+        href_urls = []
+        for div in div_elements:
+            a = div.find('a', {'data-test-id': 'object-image-link'})
+            if a:
+                href_url = a['href']
+                # Remove the "/detail" part from the URL
+                href_url = href_url.replace('/detail', '')
+                parts = href_url.split("/")
+                # Find the street name and house number
+                street_name_house_number_elem = div.find('h2', {'data-test-id': 'street-name-house-number'})
+                if street_name_house_number_elem:
+                    street_name_house_number = street_name_house_number_elem.text.strip()
+                    street_name, house_number = street_name_house_number.rsplit(' ', 1)
+                    # Format street name to lowercase and replace spaces with hyphens
+                    street_name = street_name.lower().replace(' ', '-')
+                    # Construct the modified URL
+                    transformed_url = f"https://www.funda.nl/{parts[3]}/{parts[4]}/huis-{parts[-2]}-{street_name}-{house_number}/reageer/"
+                    href_urls.append(transformed_url)
+        print(href_urls)
         return href_urls
-
         # print(request.headers)
         # print(request.cookies)
         # print(request.request.headers)
@@ -98,7 +112,6 @@ async def root():
     return HTMLResponse(content=html_content, status_code=200)  
   
 
-
 @app.post("/send-request")
 async def scrape_website(request: Request):
     # Get the URL from the request body
@@ -111,117 +124,87 @@ async def scrape_website(request: Request):
     user_value = data.get("user")
     print(url_value)
     print(user_value)
-
-
-    
- 
-
-    # Scrape the first page
-    href_urls_page1 = scrape_page(url_value, 1)
-    href_urls_page2 = scrape_page(url_value, 2)
-
-    ## send post request to each link
-
-    for href_url in href_urls_page1:
-        payload = {
-           "Opmerking": " Hello, i want to see this properity.",
-            "Email": "mkdigitalmarketer@gmail.com",
-            "Telefoon": "+905306423444",
-            "Aanhef": "Dhr",
-            "Voornaam": "Kemal",
-            "Achternaam": "Sezen",
-            "HypotheekAdviesRequested": "false",
-        }
-        # payload = {
-        #     "Opmerking": "test",
-        #     "Email": "test@gmail.com",
-        #     "Telefoon": "1234567890",
-        #     "Aanhef": "Dhr",
-        #     "Voornaam": "test",
-        #     "Achternaam": "test",
-        #     "HypotheekAdviesRequested": "false",
-        # }
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
-            "Accept-Language": "en-US,en;q=0.6",
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Referer": href_url,
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "X-Requested-With": "XMLHttpRequest",
-        }
-        try:
-            # if url was sent before, do not send again
-            # existing_urls = supabase.table("urls").select("*").eq("url", href_url).execute()
-            # if len(existing_urls.data) > 0:
-            #     print("this url exists")
-            #     continue
-
-            request = requests.post(href_url, data=payload, headers=headers)
-            
-            # if request is successful,save url to database
-            if request.status_code == 200:
-                print("request is successful")
-                print(request)
-                data = {
-                    "url": href_url,
-                    "user": user_value
-                }
-                supabase.table("urls").insert(data).execute()
-            else:
-                print("a request failed")
-                print(request)
-   
-
-
-        except Exception as e:
-            print("patladi href1")
-            print(e)
-            return {"error": str(e)}
-    for href_url in href_urls_page2:
-        payload = {
-            "Opmerking": "test",
-            "Email": "test@gmail.com",
-            "Telefoon": "1234567890",
-            "Aanhef": "Dhr",
-            "Voornaam": "test",
-            "Achternaam": "test",
-            "HypotheekAdviesRequested": "false",
-        }
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
-            "Accept-Language": "en-US,en;q=0.6",
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Referer": href_url,
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "X-Requested-With": "XMLHttpRequest",
-        }
-
-        try:
-            request = requests.post(href_url, data=payload, headers=headers)
-            # if request is successful,save url to database
-            if request.status_code == 200:
-                print("request is successful")
-                print(request)
-                data = {
-                    "url": href_url,
-                    "user": user_value
-                }
-                supabase.table("urls").insert(data).execute()
-            else:
-                print("a request failed")
-                print(request)
-        except Exception as e:
-            print("patladi href2 ")
-            print(e)
-            return {"error": str(e)}
-    return {"message": "success"}
-
      
+    # Scrape the first and second pages
+    for page_number in range(1, 3):
+        href_urls = scrape_page(url_value, page_number)
+
+        # Send post req uest to each link
+        for href_url in href_urls:
+            try:
+                # Check if the URL has already been processed for the current user
+                existing_urls = supabase.table("urls").select("url").eq("user", user_value).execute()
+                existing_urls = [entry["url"] for entry in existing_urls if entry.get("url")]
+            
+                if href_url in existing_urls:
+                    print(f"URL {href_url} already processed for user {user_value}. Skipping...")
+                    continue
+
+                get_headers ={
+                    'Accept': '*/*',
+                    'Accept-Encoding': 'gzip, deflate, br, zstd',
+                    'Accept-Language': 'en-US,en;q=0.8',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+                print(href_url)
+                initial_response = requests.get(href_url,headers=get_headers)
+
+                initial_cookies = initial_response.cookies
+                cookies_dict = requests.utils.dict_from_cookiejar(initial_cookies)
+
+                soup = BeautifulSoup(initial_response.text, 'html.parser')
+                verification_token_input = soup.find('input', attrs={'name': '__RequestVerificationToken'})
+                verification_token = verification_token_input['value']
+
+                path = href_url.split("funda.nl")[1]
+                post_headers = {
+                    "Authority": "www.funda.nl",
+                    "Method": "POST",
+                    "Path": path,
+                    "Scheme": "https",
+                    'Accept': '*/*',
+                    'Accept-Encoding': 'gzip, deflate, br, zstd',
+                    'Accept-Language': 'en-US,en;q=0.8',
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Cookie': '; '.join([f'{k}={v}' for k, v in cookies_dict.items()]),
+                    'Origin': 'https://www.funda.nl',
+                    'Referer': href_url,
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Gpc': '1',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/',
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+                payload = {
+                    "__RequestVerificationToken": verification_token,
+                   "Opmerking": "Hello, i want to see this properity.",
+                    "Email": "mkdigitalmarketer@gmail.com",
+                    "Telefoon": "+905306423444",
+                    "Aanhef": "Dhr",
+                    "Voornaam": "Kemal",
+                    "Achternaam": "Sezen",
+                }
+
+                post_url = href_url
+                request = requests.post(post_url,headers=post_headers,data=payload)
+                
+                # if request is successful,save url to database
+                if request.status_code == 200:
+                    print("request is successful")
+                    print(request)
+                    data = {
+                        "url": href_url,
+                        "user": user_value
+                    }
+                    supabase.table("urls").insert(data).execute()
+                else:
+                    print("a request failed")
+                    print(request)
+
+            except Exception as e:
+                print(f"An error occurred while sending request to {href_url}: {e}")
+                continue
+
+    return {"message": "Request sent successfully."}
