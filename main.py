@@ -120,6 +120,10 @@ async def scrape_website(request: Request):
     url = body.decode("utf-8")  # Decode bytes to string
     data = json.loads(url)
 
+    if not isinstance(data, dict):
+        # Convert data to a dictionary if it's not already
+        data = dict(data)
+
     url_value = data.get("url")
     user_value = data.get("user")
     print(url_value)
