@@ -126,9 +126,12 @@ async def scrape_website(request: Request):
 
     url_value = data.get("url")
     user_value = data.get("user")
+    email_value = data.get("email")
     print(url_value)
     print(user_value)
-     
+    print(email_value)
+    # urls that are successfully send
+    sent_urls = []
     # Scrape the first and second pages
     for page_number in range(1, 3):
         href_urls = scrape_page(url_value, page_number)
@@ -138,8 +141,15 @@ async def scrape_website(request: Request):
             try:
                 # Check if the URL has already been processed for the current user
                 existing_urls = supabase.table("urls").select("url").eq("user", user_value).execute()
-                existing_urls = [entry["url"] for entry in existing_urls if entry.get("url")]
-            
+              
+
+                #  if existing urls is empty
+                if not existing_urls.data:
+                    print("No existing URLs found for the user.")
+                else:
+                    existing_urls = [entry["url"] for entry in existing_urls.data if entry.get("url")]
+                
+
                 if href_url in existing_urls:
                     print(f"URL {href_url} already processed for user {user_value}. Skipping...")
                     continue
@@ -184,7 +194,7 @@ async def scrape_website(request: Request):
                 payload = {
                     "__RequestVerificationToken": verification_token,
                    "Opmerking": "Hello, i want to see this properity.",
-                    "Email": "mkdigitalmarketer@gmail.com",
+                    "Email": email_value,
                     "Telefoon": "+905306423444",
                     "Aanhef": "Dhr",
                     "Voornaam": "Kemal",
@@ -198,6 +208,7 @@ async def scrape_website(request: Request):
                 if request.status_code == 200:
                     print("request is successful")
                     print(request)
+                    sent_urls.append(href_url)
                     data = {
                         "url": href_url,
                         "user": user_value
@@ -211,4 +222,4 @@ async def scrape_website(request: Request):
                 print(f"An error occurred while sending request to {href_url}: {e}")
                 continue
 
-    return {"message": "Request sent successfully."}
+    return {"message": "Request sent successfully", "sent_urls": sent_urls}
