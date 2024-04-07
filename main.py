@@ -222,4 +222,4 @@ async def scrape_website(request: Request):
                 print(f"An error occurred while sending request to {href_url}: {e}")
                 continue
 
-    return {"message": "Request sent successfully", "sent_urls": sent_urls}
+    return {"message": "success", "sent_urls": sent_urls}
